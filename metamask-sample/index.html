@@ -1,0 +1,86 @@
+<html>
+    <head>
+        <title>Metamask connection</title>
+        <style>
+            button:hover {
+                background-color: darkslategrey;
+                color: white;
+            }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    </head>
+    <body>
+        <button onclick="connectMetamask()">Connect Metamask</button>
+        <p id="accountArea">Not connected</p>
+        <button onclick="connectContract()">Connect to contract</button>
+        <p id="contractArea">Not connected</p>
+        <button onclick="readContract()">Read contract </button>
+        <p id="dataArea">No Data</p>
+        <button onclick="writeContract()">Write contract </button>
+        <input type="text" id="inputArea">
+        <p id="dataArea"></p>
+
+        <script>
+            let account;
+            const connectMetamask = async () => {
+                if (window.ethereum !== "undefined"){
+                    console.log("You have Metamask!");
+                    const accounts = await ethereum.request({method: "eth_requestAccounts"});
+                    account = accounts[0];
+                    document.getElementById("accountArea").innerHTML= "Account is: " + account;
+                }
+            }
+            //2- connect to smart contract
+            const connectContract = async () => {
+                const ABI = [
+                    {
+                        "inputs": [
+                            {
+                                "internalType": "string",
+                                "name": "words",
+                                "type": "string"
+                            }
+                        ],
+                        "name": "sayGreeting",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "sayHello",
+                        "outputs": [
+                            {
+                                "internalType": "string",
+                                "name": "",
+                                "type": "string"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ];
+                //Sepolia
+                //const address = "0x817d1E1c591B5D8485Ea26455D374E1f50B24E76";
+                //Ganache
+                const address = "0x0E73638D9573D5112CCE68ef10B88bb9307a0519";
+                window.web3 = await new Web3(window.ethereum);
+                window.contract = await new window.web3.eth.Contract(ABI, address);
+                document.getElementById("contractArea").innerHTML = "connected to smart contract"
+            };
+
+            //3- read from smart contract
+            const readContract = async () => {
+                const data = await window.contract.methods.sayHello().call();
+                document.getElementById("dataArea").innerHTML = data;
+            }
+
+            //4- write data to smart contract
+            const writeContract = async () => {
+                const value = document.getElementById("inputArea").value;
+                await window.contract.methods.sayGreeting(value).send({from:account});
+            }
+        </script>
+    </body>
+
+</html>
