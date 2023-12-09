@@ -1,0 +1,133 @@
+<html>
+    <head>
+        <title>Metamask connection</title>
+        <style>
+            button:hover {
+                background-color: darkslategrey;
+                color: white;
+            }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    </head>
+    <body>
+        <div id="readArea">
+            <button onclick="connectMetamask()">Connect Metamask</button>
+            <p id="userAccount">Status: Not connected</p>
+            <button onclick="connectContract()">Connect to contract</button>
+            <p id="contractArea">Status: Not connected to contract</p>
+            <button onclick="getContractAccount()">Get contract account</button>
+            <p id="contractAccount">Contract account: Not connected to contract</p>
+            <button onclick="getBalance()">Get balance</button>
+            <p id="balanceArea">Balance: Not connected to contract</p>
+        </div>
+        <div id="writeArea">
+            <input type="number" id="depositInput" placeholder="Enter amount">
+            <button onclick="depositContract()">Send ethers to the contract</button><br><br>            
+            
+            <input type="text" id="addressInput" placeholder="Enter an address">
+            <input type="number" id="amountInput" placeholder="Enter amount">
+            <button onclick="withdraw()">Withraw ether</button>
+        </div>
+        <script>
+            // 1- connect to metamask
+            let account;
+            const connectMetamask = async () => {
+                if (window.ethereum !== "undefined"){
+                    console.log("You have Metamask!");
+                    const accounts = await ethereum.request({method: "eth_requestAccounts"});
+                    account = accounts[0];
+                    document.getElementById("userAccount").innerHTML= "Account is:" + account;
+                }
+            }
+            //2- connect to smart contract
+            const connectContract = async () => {
+                const ABI = [
+                    {
+                        "inputs": [],
+                        "name": "deposit",
+                        "outputs": [],
+                        "stateMutability": "payable",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [
+                            {
+                                "internalType": "address payable",
+                                "name": "_to",
+                                "type": "address"
+                            },
+                            {
+                                "internalType": "uint256",
+                                "name": "_amount",
+                                "type": "uint256"
+                            }
+                        ],
+                        "name": "withdraw",
+                        "outputs": [],
+                        "stateMutability": "nonpayable",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "getAddress",
+                        "outputs": [
+                            {
+                                "internalType": "address",
+                                "name": "",
+                                "type": "address"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    },
+                    {
+                        "inputs": [],
+                        "name": "getBalance",
+                        "outputs": [
+                            {
+                                "internalType": "uint256",
+                                "name": "",
+                                "type": "uint256"
+                            }
+                        ],
+                        "stateMutability": "view",
+                        "type": "function"
+                    }
+                ];
+
+                //Ganache
+                const address = "0x80eb5d426054be849354be994A428F0eE4D7f352";
+                window.web3 = await new Web3(window.ethereum);
+                window.contract = await new window.web3.eth.Contract(ABI, address);
+                document.getElementById("contractArea").innerHTML = "connected to smart contract"
+            };
+
+            //3- Get smart contract account
+            const getContractAccount = async () => {
+                const address = await window.contract.methods.getAddress().call();
+                document.getElementById("contractAccount").innerHTML = address;
+            }
+
+            //4- Get balance
+            const getBalance = async () => {
+                const balance = await window.contract.methods.getBalance().call();
+                document.getElementById("balanceArea").innerHTML = balance;
+            }
+
+            //5- Deposit
+            const depositContract = async () => {
+                const amount = document.getElementById("depositInput").value
+                const balance = await window.contract.methods.deposit().send({from:account, value:amount});
+            }
+
+            //5- Withdraw
+            const withdraw = async () => {
+                const address = document.getElementById("addressInput").value
+                const amount = document.getElementById("amountInput").value
+                const balance = await window.contract.methods.withdraw(address, amount).send({from:account});
+                
+            }
+        </script>
+    </body>
+
+</html>
